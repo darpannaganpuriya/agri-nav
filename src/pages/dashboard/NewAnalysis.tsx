@@ -19,14 +19,15 @@ import { Loader2 } from "lucide-react";
 
 const schema = z.object({
   crop: z.string().min(1, "Choose a crop"),
-  quantity_kg: z.coerce.number().positive("Quantity must be > 0"),
+  quantity_kg: z.number().positive("Quantity must be > 0"),
   harvest_date: z.string().min(1, "Pick a date"),
   state: z.string().min(1, "Choose a state"),
   district: z.string().min(1, "Choose a district"),
-  current_price: z.coerce.number().positive("Enter today's mandi price"),
-  temperature: z.coerce.number().min(0).max(45),
-  humidity: z.coerce.number().min(40).max(100),
+  current_price: z.number().positive("Enter today's mandi price"),
+  temperature: z.number().min(0).max(45),
+  humidity: z.number().min(40).max(100),
 });
+type FormData = z.infer<typeof schema>;
 
 export function NewAnalysis() {
   const nav = useNavigate();
