@@ -79,7 +79,7 @@ export function NewAnalysis() {
             </div>
             <div>
               <Label>Quantity (kg)</Label>
-              <Input className="mt-1" type="number" {...register("quantity_kg")} />
+              <Input className="mt-1" type="number" {...register("quantity_kg", { valueAsNumber: true })} />
               {errors.quantity_kg && <p className="mt-1 text-xs text-destructive">{errors.quantity_kg.message}</p>}
             </div>
             <div>
@@ -115,7 +115,7 @@ export function NewAnalysis() {
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Market input</h3>
           <div className="mt-4">
             <Label>Today's mandi price (₹ per quintal)</Label>
-            <Input className="mt-1" type="number" {...register("current_price")} />
+            <Input className="mt-1" type="number" {...register("current_price", { valueAsNumber: true })} />
             <p className="mt-1 text-xs text-muted-foreground">≈ ₹{(Number(currentPrice) / 100).toFixed(2)}/kg</p>
             {errors.current_price && <p className="mt-1 text-xs text-destructive">{errors.current_price.message}</p>}
           </div>
@@ -127,12 +127,12 @@ export function NewAnalysis() {
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div>
               <Label>Temperature (°C) <span className="text-xs text-muted-foreground">— trained range 0-45</span></Label>
-              <Input className="mt-1" type="number" step="0.1" {...register("temperature")} />
+              <Input className="mt-1" type="number" step="0.1" {...register("temperature", { valueAsNumber: true })} />
               {errors.temperature && <p className="mt-1 text-xs text-destructive">{errors.temperature.message}</p>}
             </div>
             <div>
               <Label>Humidity (%) <span className="text-xs text-muted-foreground">— trained range 40-100</span></Label>
-              <Input className="mt-1" type="number" {...register("humidity")} />
+              <Input className="mt-1" type="number" {...register("humidity", { valueAsNumber: true })} />
               {errors.humidity && <p className="mt-1 text-xs text-destructive">{errors.humidity.message}</p>}
             </div>
           </div>
