@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+
 
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { FarmerDashboardLayout } from "@/layouts/FarmerDashboardLayout";
