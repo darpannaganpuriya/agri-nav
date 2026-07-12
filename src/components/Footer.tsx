@@ -36,7 +36,7 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-semibold">Contact</h4>
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> +91 731 555 0198</li>
+              <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> +91 9111946697</li>
               <li className="flex items-center gap-2"><Mail className="h-4 w-4" /> hello@fasalseva.ai</li>
               <li className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Indore, Madhya Pradesh</li>
               <li className="text-xs">Available in English &amp; हिंदी</li>

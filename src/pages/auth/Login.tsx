@@ -31,7 +31,7 @@ export function Login() {
         const user = await authService.verifyOtp(phone, otp);
         setUser(user);
         toast.success("Welcome back");
-        nav("/dashboard");
+        nav(user.role === "storage_owner" ? (user.hasStorage ? "/storage/dashboard" : "/storage/onboarding") : "/dashboard");
       }
     } finally { setLoading(false); }
   }

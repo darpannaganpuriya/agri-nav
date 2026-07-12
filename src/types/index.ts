@@ -21,6 +21,19 @@ export interface SpoilageOutput {
   risk_level: RiskLevel;
 }
 
+export interface ShelfLifeInput {
+  crop: CropName;
+  temperature: number;
+  humidity: number;
+  days_stored: number;
+}
+export interface ShelfLifeOutput {
+  days_remaining: number;
+  confidence: number;
+  risk_level: RiskLevel;
+  recommendation: string;
+}
+
 // ---- Model 2: XGBoost mandi price forecast ----
 export interface PriceInput {
   crop: CropName;
@@ -32,6 +45,22 @@ export interface PriceInput {
 }
 export interface PriceOutput {
   price_after_15_days: number; // ₹/quintal
+}
+
+export interface PricePredictionInput {
+  crop: CropName;
+  state: string;
+  district: string;
+  current_price: number;
+  month: number;
+  week: number;
+}
+export interface PricePredictionOutput {
+  current_price: number;
+  price_after_15_days: number;
+  difference: number;
+  trend: MarketTrend;
+  confidence: number;
 }
 
 // ---- Composite: full analysis (what the /analyze endpoint returns) ----
@@ -80,18 +109,68 @@ export interface ProfitBreakdown {
 // ---- Cold storage ----
 export interface StorageFacility {
   id: string;
+  owner_id?: string;
   name: string;
+  storage_type?: string;
+  owner_name?: string;
+  phone?: string;
+  email?: string;
+  address: string;
+  state?: string;
+  district?: string;
+  pincode?: string;
+  lat: number;
+  lng: number;
   distance_km: number;
   capacity_tons: number;
   available_tons: number;
+  occupied_tons?: number;
   cost_per_kg_day: number;
+  cost_per_crate_day?: number;
   compatible_crops: CropName[];
   rating: number;
-  lat: number;
-  lng: number;
   image: string;
-  address: string;
   amenities: string[];
+  verification_status?: string;
+  status?: "Active" | "Paused";
+  temperature_range?: string;
+  humidity_range?: string;
+  facilities?: string[];
+  total_capacity_kg?: number;
+  occupied_capacity_kg?: number;
+  available_capacity_kg?: number;
+  max_daily_intake_kg?: number;
+  max_capacity_per_booking_kg?: number;
+  storage_chambers?: number;
+  min_booking_days?: number;
+  max_booking_days?: number;
+  loading_charges?: number;
+  unloading_charges?: number;
+  packaging_charges?: number;
+  security_deposit?: number;
+  gst_included?: boolean;
+  min_temperature?: number;
+  max_temperature?: number;
+  cooling_technology?: string;
+  working_hours?: string;
+  power_backup?: string;
+  generator?: boolean;
+  solar_backup?: boolean;
+  insurance_available?: boolean;
+  security_24x7?: boolean;
+  cctv?: boolean;
+  digital_weighing_machine?: boolean;
+  forklift?: boolean;
+  loading_dock?: boolean;
+  parking?: boolean;
+  images?: {
+    front?: string;
+    inside?: string;
+    chambers?: string;
+    office?: string;
+    license?: string;
+    registration?: string;
+  };
 }
 export interface BookingInput {
   facility_id: string;

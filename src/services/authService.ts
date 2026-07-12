@@ -1,8 +1,20 @@
 import { mockDelay } from "@/api/client";
 
-export interface AuthUser { id: string; name: string; phone: string; role: "farmer" | "storage_owner"; }
+export interface AuthUser {
+  id: string;
+  name: string;
+  phone: string;
+  role: "farmer" | "storage_owner";
+  hasStorage?: boolean;
+}
 
 const KEY = "fasalseva.user";
+const PENDING_KEY = "fasalseva.pending";
+
+function readPending() {
+  if (typeof window === "undefined") return null;
+  try { return JSON.parse(localStorage.getItem(PENDING_KEY) || "null"); } catch { return null; }
+}
 
 export const authService = {
   currentUser(): AuthUser | null {
@@ -13,13 +25,27 @@ export const authService = {
     return mockDelay({ requiresOtp: true as const }, 500);
   },
   async verifyOtp(phone: string, _otp: string, name = "Ramesh Patel"): Promise<AuthUser> {
-    const user: AuthUser = { id: "u_1", name, phone, role: "farmer" };
+    const pending = readPending();
+    const role = pending?.role ?? "farmer";
+    const user: AuthUser = {
+      id: role === "storage_owner" ? "u_owner_1" : "u_1",
+      name,
+      phone,
+      role,
+      hasStorage: role === "storage_owner" ? false : undefined,
+    };
     localStorage.setItem(KEY, JSON.stringify(user));
+    localStorage.removeItem(PENDING_KEY);
     return mockDelay(user, 500);
   },
   async signup(name: string, phone: string, role: AuthUser["role"] = "farmer"): Promise<{ requiresOtp: true }> {
-    localStorage.setItem("fasalseva.pending", JSON.stringify({ name, phone, role }));
+    localStorage.setItem(PENDING_KEY, JSON.stringify({ name, phone, role }));
     return mockDelay({ requiresOtp: true as const }, 500);
   },
-  logout() { localStorage.removeItem(KEY); },
+  updateCurrentUser(user: AuthUser) {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(KEY, JSON.stringify(user));
+    return user;
+  },
+  logout() { localStorage.removeItem(KEY); localStorage.removeItem(PENDING_KEY); },
 };
