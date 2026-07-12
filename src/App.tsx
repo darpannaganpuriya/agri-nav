@@ -24,6 +24,10 @@ import { History } from "@/pages/dashboard/History";
 import { Profile, Settings } from "@/pages/dashboard/Profile";
 
 export function App() {
+  // BrowserRouter uses window.location, so mount only after hydration.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
   return (
     <ThemeProvider>
       <AuthProvider>
