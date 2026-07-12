@@ -32,7 +32,7 @@ type FormData = z.infer<typeof schema>;
 export function NewAnalysis() {
   const nav = useNavigate();
   const [state, setState] = useState<string>("");
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<z.infer<typeof schema>>({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       crop: "", quantity_kg: 100, harvest_date: new Date().toISOString().slice(0, 10),
