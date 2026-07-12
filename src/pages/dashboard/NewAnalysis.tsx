@@ -47,7 +47,7 @@ export function NewAnalysis() {
     onError: () => toast.error("Something went wrong"),
   });
 
-  const onSubmit = (v: z.infer<typeof schema>) => mutation.mutate(v as AnalysisInput);
+  const onSubmit = (v: FormData) => mutation.mutate(v as AnalysisInput);
 
   const currentPrice = watch("current_price");
 
