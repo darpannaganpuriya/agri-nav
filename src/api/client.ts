@@ -3,7 +3,7 @@ import axios from "axios";
 const token = typeof window !== "undefined" ? window.localStorage.getItem("fasalseva.token") : null;
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "https://fasalseva-backend.onrender.com",
   timeout: 15_000,
   headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
 });
