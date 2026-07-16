@@ -1,51 +1,76 @@
-import { mockDelay } from "@/api/client";
+import { apiClient } from "@/api/client";
+import { storageService } from "./storageService";
 
 export interface AuthUser {
   id: string;
   name: string;
+  email: string;
   phone: string;
   role: "farmer" | "storage_owner";
   hasStorage?: boolean;
+  company_name?: string;
 }
 
 const KEY = "fasalseva.user";
-const PENDING_KEY = "fasalseva.pending";
-
-function readPending() {
-  if (typeof window === "undefined") return null;
-  try { return JSON.parse(localStorage.getItem(PENDING_KEY) || "null"); } catch { return null; }
-}
+const TOKEN_KEY = "fasalseva.token";
 
 export const authService = {
   currentUser(): AuthUser | null {
     if (typeof window === "undefined") return null;
     try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; }
   },
-  async login(phone: string): Promise<{ requiresOtp: true }> {
-    return mockDelay({ requiresOtp: true as const }, 500);
+  async resolveUser(user: AuthUser | null): Promise<AuthUser | null> {
+    if (!user) return null;
+    if (!user.role || user.role !== "storage_owner") return user;
+    const storages = await storageService.getStorageByOwner(user.id);
+    const resolvedUser = { ...user, hasStorage: storages.length > 0 };
+    if (typeof window !== "undefined") {
+      localStorage.setItem(KEY, JSON.stringify(resolvedUser));
+    }
+    return resolvedUser;
   },
-  async verifyOtp(phone: string, _otp: string, name = "Ramesh Patel"): Promise<AuthUser> {
-    const pending = readPending();
-    const role = pending?.role ?? "farmer";
-    const user: AuthUser = {
-      id: role === "storage_owner" ? "u_owner_1" : "u_1",
-      name,
-      phone,
-      role,
-      hasStorage: role === "storage_owner" ? false : undefined,
-    };
-    localStorage.setItem(KEY, JSON.stringify(user));
-    localStorage.removeItem(PENDING_KEY);
-    return mockDelay(user, 500);
+  async hydrateCurrentUser(): Promise<AuthUser | null> {
+    return this.resolveUser(this.currentUser());
   },
-  async signup(name: string, phone: string, role: AuthUser["role"] = "farmer"): Promise<{ requiresOtp: true }> {
-    localStorage.setItem(PENDING_KEY, JSON.stringify({ name, phone, role }));
-    return mockDelay({ requiresOtp: true as const }, 500);
+  async login(email: string, password: string, role: string = "farmer"): Promise<{ user: AuthUser }> {
+    const response = await apiClient.post("/api/auth/login", { email, password, role });
+    const user = response?.data?.user as AuthUser | undefined;
+    if (!user) throw new Error(response?.data?.detail || "Invalid login response");
+    const sessionUser: AuthUser = { ...user, hasStorage: (user.role === "storage_owner") ? false : undefined };
+    const resolvedUser = await this.resolveUser(sessionUser);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(TOKEN_KEY, response.data.access_token);
+      localStorage.setItem(KEY, JSON.stringify(resolvedUser ?? sessionUser));
+    }
+    return { user: resolvedUser ?? sessionUser };
+  },
+  async signup(name: string, email: string, password: string, phone: string, role: AuthUser["role"] = "farmer"): Promise<AuthUser> {
+    const response = await apiClient.post("/api/auth/signup", { name, email, password, phone, role });
+    const user = response?.data?.user as AuthUser | undefined;
+    if (!user) throw new Error(response?.data?.detail || "Invalid signup response");
+    const sessionUser: AuthUser = { ...user, hasStorage: (user.role === "storage_owner") ? false : undefined };
+    if (typeof window !== "undefined") {
+      localStorage.setItem(TOKEN_KEY, response.data.access_token);
+      localStorage.setItem(KEY, JSON.stringify(sessionUser));
+    }
+    return sessionUser;
   },
   updateCurrentUser(user: AuthUser) {
     if (typeof window === "undefined") return;
     localStorage.setItem(KEY, JSON.stringify(user));
     return user;
   },
-  logout() { localStorage.removeItem(KEY); localStorage.removeItem(PENDING_KEY); },
+  async updateProfile(name: string, phone: string, company_name?: string): Promise<AuthUser> {
+    const response = await apiClient.put("/api/user/profile", { name, phone, company_name });
+    const user = response?.data as AuthUser | undefined;
+    if (!user) throw new Error("Failed to update profile");
+    const sessionUser = { ...this.currentUser(), ...user };
+    this.updateCurrentUser(sessionUser as AuthUser);
+    return sessionUser as AuthUser;
+  },
+  logout() {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem(KEY);
+    localStorage.removeItem(TOKEN_KEY);
+  },
 };

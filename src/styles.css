@@ -3,6 +3,48 @@
 @import "tw-animate-css";
 @import "leaflet/dist/leaflet.css";
 
+/* ── Fix: Leaflet map z-index must not bleed above modal dialogs ── */
+/* Radix UI Dialog portal renders into <body>; ensure it's always on top */
+[data-radix-dialog-overlay],
+[data-radix-dialog-content],
+[data-radix-alert-dialog-overlay],
+[data-radix-alert-dialog-content] {
+  z-index: 1000 !important;
+}
+/* Keep ALL Leaflet internal panes below dialog level */
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control,
+.leaflet-marker-pane,
+.leaflet-tooltip-pane,
+.leaflet-popup-pane {
+  z-index: unset !important;
+}
+.leaflet-map-pane { z-index: 1 !important; }
+.leaflet-tile-pane { z-index: 2 !important; }
+.leaflet-overlay-pane { z-index: 3 !important; }
+.leaflet-shadow-pane { z-index: 4 !important; }
+.leaflet-marker-pane { z-index: 5 !important; }
+.leaflet-tooltip-pane { z-index: 6 !important; }
+.leaflet-popup-pane { z-index: 7 !important; }
+.leaflet-control-container .leaflet-top,
+.leaflet-control-container .leaflet-bottom { z-index: 8 !important; }
+
+/* ── Hide Google Translate banner while keeping the widget functional ── */
+/* The banner iframe must be hidden but the underlying widget must stay operational */
+.goog-te-banner-frame.skiptranslate { display: none !important; }
+#goog-gt-tt,
+.goog-te-balloon-frame { display: none !important; }
+/* Prevent Google from pushing body down when the bar appears */
+body { top: 0 !important; position: static !important; }
+/* Hide the visible part of the widget container, keep it in DOM for JS */
+.goog-te-gadget > span,
+.goog-te-gadget > a,
+.goog-logo-link { display: none !important; }
+/* The select itself must remain in DOM (just visually hidden) so we can trigger it */
+.goog-te-combo { visibility: hidden; position: absolute; left: -9999px; }
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

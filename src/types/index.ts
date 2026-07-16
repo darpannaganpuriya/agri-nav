@@ -111,6 +111,7 @@ export interface StorageFacility {
   id: string;
   owner_id?: string;
   name: string;
+  company_name?: string;
   storage_type?: string;
   owner_name?: string;
   phone?: string;
@@ -180,9 +181,12 @@ export interface BookingInput {
 }
 export interface Booking extends BookingInput {
   id: string;
-  status: "Pending" | "Confirmed" | "Rejected";
+  status: "Pending" | "Confirmed" | "Rejected" | "Completed" | "Cancelled";
   created_at: string;
   facility_name: string;
+  owner_id?: string;
+  farmer_id?: string;
+  farmer_name?: string;
   estimated_cost: number;
 }
 

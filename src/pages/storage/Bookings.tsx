@@ -6,14 +6,29 @@ import { storageService } from "@/services/storageService";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Booking } from "@/types";
 import { CheckCircle2, XCircle, Eye } from "lucide-react";
+import { toast } from "sonner";
 
 export function StorageBookings() {
   const { user } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
 
-  useEffect(() => {
+  const fetchBookings = () => {
     storageService.getBookings(user?.id).then((data) => setBookings(data));
+  };
+
+  useEffect(() => {
+    fetchBookings();
   }, [user?.id]);
+
+  async function handleUpdateStatus(id: string, status: Booking["status"]) {
+    try {
+      await storageService.updateBookingStatus(id, status);
+      toast.success(`Booking ${status.toLowerCase()}`);
+      fetchBookings();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to update status");
+    }
+  }
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -40,16 +55,24 @@ export function StorageBookings() {
                 <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No bookings yet.</td></tr>
               ) : bookings.map((booking) => (
                 <tr key={booking.id} className="border-t border-border/60">
-                  <td className="px-4 py-3 font-medium">Farmer</td>
+                  <td className="px-4 py-3 font-medium">{booking.farmer_name || "Farmer"}</td>
                   <td className="px-4 py-3">{booking.crop}</td>
                   <td className="px-4 py-3">{booking.quantity_kg} kg</td>
                   <td className="px-4 py-3">{booking.duration_days}</td>
                   <td className="px-4 py-3">{new Date().toLocaleDateString("en-IN")}</td>
-                  <td className="px-4 py-3"><Badge>{booking.status}</Badge></td>
+                  <td className="px-4 py-3">
+                    <Badge variant={booking.status === "Confirmed" ? "default" : booking.status === "Rejected" ? "destructive" : "secondary"}>
+                      {booking.status}
+                    </Badge>
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline"><CheckCircle2 className="mr-1 h-4 w-4" /> Accept</Button>
-                      <Button size="sm" variant="outline"><XCircle className="mr-1 h-4 w-4" /> Reject</Button>
+                      {booking.status === "Pending" && (
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => handleUpdateStatus(booking.id, "Confirmed")}><CheckCircle2 className="mr-1 h-4 w-4" /> Accept</Button>
+                          <Button size="sm" variant="outline" onClick={() => handleUpdateStatus(booking.id, "Rejected")}><XCircle className="mr-1 h-4 w-4" /> Reject</Button>
+                        </>
+                      )}
                       <Button size="sm" variant="ghost"><Eye className="mr-1 h-4 w-4" /> View</Button>
                     </div>
                   </td>

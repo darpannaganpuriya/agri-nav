@@ -270,7 +270,7 @@ export function ShelfLifePrediction() {
                     <ResponsiveContainer width="100%" height="100%">
                       <RadialBarChart innerRadius="70%" outerRadius="100%" data={gaugeData} startAngle={180} endAngle={0}>
                         <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-                        <RadialBar background clockWise dataKey="value" cornerRadius={12} />
+                        <RadialBar background dataKey="value" cornerRadius={12} />
                       </RadialBarChart>
                     </ResponsiveContainer>
                   </div>

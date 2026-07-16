@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
+import { lazy, Suspense } from "react";
 import { storageService } from "@/services/storageService";
 import type { CropName, StorageFacility } from "@/types";
 import { CROPS } from "@/constants/data";
@@ -16,12 +15,18 @@ import { Star, MapPin, IndianRupee, Package, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Custom leaflet marker (avoid missing default icon assets in bundlers)
-const icon = L.divIcon({
-  className: "",
-  html: `<div style="background:oklch(0.48 0.13 145);width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,.25)"></div>`,
-  iconSize: [28, 28], iconAnchor: [14, 28],
-});
+const StorageMap = lazy(() => import("./StorageMap"));
+
+function ClientMap({ facilities }: { facilities?: StorageFacility[] }) {
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => setIsClient(true), []);
+  if (!isClient) return <Skeleton className="h-full w-full" />;
+  return (
+    <Suspense fallback={<Skeleton className="h-full w-full" />}>
+      <StorageMap facilities={facilities} />
+    </Suspense>
+  );
+}
 
 export function ColdStorage() {
   const [crop, setCrop] = useState<CropName | "all">("all");
@@ -58,20 +63,8 @@ export function ColdStorage() {
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-5">
-        <Card className="h-[420px] overflow-hidden lg:col-span-3">
-          <MapContainer center={[22.7196, 75.8577]} zoom={11} style={{ height: "100%", width: "100%" }}>
-            <TileLayer attribution="© OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            {facilities?.map(f => (
-              <Marker key={f.id} position={[f.lat, f.lng]} icon={icon}>
-                <Popup>
-                  <div className="text-sm">
-                    <p className="font-semibold">{f.name}</p>
-                    <p className="text-xs text-muted-foreground">{f.distance_km} km · ₹{f.cost_per_kg_day}/kg/day</p>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+        <Card className="h-[420px] overflow-hidden lg:col-span-3" style={{ isolation: "isolate" }}>
+          <ClientMap facilities={facilities} />
         </Card>
 
         <div className="space-y-3 lg:col-span-2">

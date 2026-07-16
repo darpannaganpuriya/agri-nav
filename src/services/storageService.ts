@@ -1,57 +1,43 @@
-import { mockDelay } from "@/api/client";
+import { apiClient } from "@/api/client";
 import type { StorageFacility, Booking, BookingInput, CropName } from "@/types";
 import coldStorageImg from "@/assets/cold-storage.jpg";
 
-const ALL_CROPS: CropName[] = ["Tomato","Potato","Onion","Banana","Mango","Cauliflower","Cabbage","Spinach","Grapes","Guava","Carrot","Brinjal","Wheat","Rice"];
-
-const INITIAL_FACILITIES: StorageFacility[] = [
-  {
-    id: "cs_1", owner_id: "owner_demo", name: "Malwa Cold Chain", distance_km: 3.2,
-    capacity_tons: 500, available_tons: 120, occupied_tons: 380, cost_per_kg_day: 0.18,
-    compatible_crops: ["Tomato","Potato","Onion","Cauliflower","Cabbage","Carrot","Brinjal"],
-    rating: 4.7, lat: 22.7196, lng: 75.8577, image: coldStorageImg,
-    address: "Sector 4, Sanwer Road, Indore, MP", amenities: ["24/7 backup", "Pre-cooling", "Reefer loading bay", "CCTV"],
-    verification_status: "Verified", status: "Active", temperature_range: "8°C - 14°C", humidity_range: "70% - 85%", facilities: ["Generator", "CCTV", "Loading Dock"],
-  },
-  {
-    id: "cs_2", owner_id: "owner_demo_2", name: "Krishi Bhandar", distance_km: 6.8,
-    capacity_tons: 300, available_tons: 45, occupied_tons: 255, cost_per_kg_day: 0.22,
-    compatible_crops: ["Grapes","Mango","Guava","Banana"],
-    rating: 4.4, lat: 22.7532, lng: 75.8937, image: coldStorageImg,
-    address: "Rau, Indore, MP", amenities: ["Humidity control", "Ripening chamber", "Fumigation"],
-    verification_status: "Verified", status: "Active", temperature_range: "10°C - 18°C", humidity_range: "80% - 90%", facilities: ["Solar Backup", "Parking"],
-  },
-  {
-    id: "cs_3", owner_id: "owner_demo_3", name: "GreenChain Warehouse", distance_km: 11.4,
-    capacity_tons: 800, available_tons: 320, occupied_tons: 480, cost_per_kg_day: 0.15,
-    compatible_crops: ALL_CROPS,
-    rating: 4.9, lat: 22.6800, lng: 75.9100, image: coldStorageImg,
-    address: "Mhow-Neemuch Highway, Indore, MP", amenities: ["Solar backup", "Multi-zone", "24/7 backup", "Insurance included"],
-    verification_status: "Verified", status: "Active", temperature_range: "4°C - 12°C", humidity_range: "65% - 80%", facilities: ["Generator", "Solar Backup", "Insurance"],
-  },
-  {
-    id: "cs_4", owner_id: "owner_demo_4", name: "Annapurna Storage", distance_km: 14.9,
-    capacity_tons: 400, available_tons: 0, occupied_tons: 400, cost_per_kg_day: 0.20,
-    compatible_crops: ["Wheat","Rice","Onion","Potato"],
-    rating: 4.1, lat: 22.6500, lng: 75.7800, image: coldStorageImg,
-    address: "Khandwa Road, Indore, MP", amenities: ["Grain silos", "Weigh bridge"],
-    verification_status: "Pending", status: "Paused", temperature_range: "12°C - 20°C", humidity_range: "50% - 70%", facilities: ["Forklift"],
-  },
-];
-
-let FACILITIES: StorageFacility[] = [...INITIAL_FACILITIES];
-let BOOKINGS: Booking[] = [];
+function normalizeStorage(storage: any): StorageFacility {
+  return {
+    id: storage.id,
+    owner_id: storage.owner_id,
+    name: storage.name,
+    address: storage.address,
+    state: storage.state,
+    district: storage.district,
+    pincode: storage.pincode,
+    lat: storage.lat,
+    lng: storage.lng,
+    distance_km: 0,
+    capacity_tons: Math.round((storage.total_capacity_kg ?? 0) / 1000),
+    available_tons: Math.round((storage.available_capacity_kg ?? 0) / 1000),
+    occupied_tons: Math.max(0, Math.round(((storage.total_capacity_kg ?? 0) - (storage.available_capacity_kg ?? 0)) / 1000)),
+    cost_per_kg_day: storage.cost_per_kg_day ?? 0.2,
+    compatible_crops: storage.compatible_crops ?? [],
+    rating: 4.5,
+    image: coldStorageImg,
+    amenities: storage.facilities ?? ["24/7 Security"],
+    verification_status: storage.verification_status ?? "Pending",
+    status: storage.status ?? "Active",
+    temperature_range: storage.temperature_range,
+    humidity_range: storage.humidity_range,
+    facilities: storage.facilities ?? [],
+    total_capacity_kg: storage.total_capacity_kg,
+    available_capacity_kg: storage.available_capacity_kg,
+    occupied_capacity_kg: storage.total_capacity_kg ? storage.total_capacity_kg - storage.available_capacity_kg : 0,
+  } as StorageFacility;
+}
 
 export const storageService = {
   async registerStorage(input: Omit<StorageFacility, "id" | "distance_km" | "capacity_tons" | "available_tons" | "rating" | "image" | "amenities" | "verification_status" | "status"> & { image?: string; distance_km?: number; capacity_tons?: number; available_tons?: number; rating?: number; amenities?: string[]; verification_status?: string; status?: "Active" | "Paused" }): Promise<StorageFacility> {
-    const totalCapacityTons = Math.max(50, Math.round((input.total_capacity_kg ?? 0) / 1000));
-    const availableCapacityTons = Math.max(0, Math.round((input.available_capacity_kg ?? input.total_capacity_kg ?? 0) / 1000));
-    const occupiedCapacityTons = Math.max(0, totalCapacityTons - availableCapacityTons);
-    const facility: StorageFacility = {
-      id: `cs_${Date.now()}`,
-      owner_id: input.owner_id,
+    const response = await apiClient.post("/api/storage", {
       name: input.name,
-      storage_type: input.storage_type,
+      owner_id: input.owner_id,
       owner_name: input.owner_name,
       phone: input.phone,
       email: input.email,
@@ -59,99 +45,59 @@ export const storageService = {
       state: input.state,
       district: input.district,
       pincode: input.pincode,
-      lat: input.lat ?? 22.7196,
-      lng: input.lng ?? 75.8577,
-      distance_km: input.distance_km ?? 4.5,
-      capacity_tons: totalCapacityTons,
-      available_tons: availableCapacityTons,
-      occupied_tons: occupiedCapacityTons,
-      cost_per_kg_day: input.cost_per_kg_day ?? 0.2,
-      cost_per_crate_day: input.cost_per_crate_day,
-      compatible_crops: input.compatible_crops ?? [],
-      rating: input.rating ?? 4.5,
-      image: input.image ?? coldStorageImg,
-      amenities: input.amenities ?? ["24/7 Security", "Power Backup"],
-      verification_status: input.verification_status ?? "Pending",
-      status: input.status ?? "Active",
+      lat: input.lat,
+      lng: input.lng,
+      cost_per_kg_day: input.cost_per_kg_day,
+      compatible_crops: input.compatible_crops,
+      total_capacity_kg: input.total_capacity_kg ?? 0,
+      available_capacity_kg: input.available_capacity_kg ?? 0,
       temperature_range: input.temperature_range,
       humidity_range: input.humidity_range,
       facilities: input.facilities,
-      total_capacity_kg: input.total_capacity_kg,
-      occupied_capacity_kg: input.occupied_capacity_kg,
-      available_capacity_kg: input.available_capacity_kg,
-      max_daily_intake_kg: input.max_daily_intake_kg,
-      max_capacity_per_booking_kg: input.max_capacity_per_booking_kg,
-      storage_chambers: input.storage_chambers,
-      min_booking_days: input.min_booking_days,
-      max_booking_days: input.max_booking_days,
-      loading_charges: input.loading_charges,
-      unloading_charges: input.unloading_charges,
-      packaging_charges: input.packaging_charges,
-      security_deposit: input.security_deposit,
-      gst_included: input.gst_included,
-      min_temperature: input.min_temperature,
-      max_temperature: input.max_temperature,
-      cooling_technology: input.cooling_technology,
-      working_hours: input.working_hours,
-      power_backup: input.power_backup,
-      generator: input.generator,
-      solar_backup: input.solar_backup,
-      insurance_available: input.insurance_available,
-      security_24x7: input.security_24x7,
-      cctv: input.cctv,
-      digital_weighing_machine: input.digital_weighing_machine,
-      forklift: input.forklift,
-      loading_dock: input.loading_dock,
-      parking: input.parking,
-      images: input.images,
-    };
-    FACILITIES = [facility, ...FACILITIES];
-    return mockDelay(facility, 500);
+    });
+    return normalizeStorage(response.data);
   },
   async getAllStorages(): Promise<StorageFacility[]> {
-    return mockDelay([...FACILITIES].sort((a, b) => a.distance_km - b.distance_km), 400);
+    const response = await apiClient.get("/api/storage");
+    return response.data.map(normalizeStorage).sort((a: StorageFacility, b: StorageFacility) => a.distance_km - b.distance_km);
   },
   async getStorageByOwner(ownerId?: string): Promise<StorageFacility[]> {
-    const id = ownerId ?? "";
-    return mockDelay(FACILITIES.filter((facility) => facility.owner_id === id), 300);
+    const response = await apiClient.get(`/api/storage/owner/${ownerId ?? ""}`);
+    return response.data.map(normalizeStorage);
   },
   async getFacilities(filters?: { crop?: CropName; maxDistance?: number }): Promise<StorageFacility[]> {
-    let list = [...FACILITIES];
-    if (filters?.crop) list = list.filter((f) => f.compatible_crops.includes(filters.crop!));
-    if (filters?.maxDistance) list = list.filter((f) => f.distance_km <= filters.maxDistance!);
-    return mockDelay(list.sort((a, b) => a.distance_km - b.distance_km), 400);
+    const response = await apiClient.get("/api/storage");
+    return response.data
+      .map(normalizeStorage)
+      .filter((f: StorageFacility) => !filters?.crop || f.compatible_crops.includes(filters.crop))
+      .filter((f: StorageFacility) => !filters?.maxDistance || f.distance_km <= filters.maxDistance)
+      .sort((a: StorageFacility, b: StorageFacility) => a.distance_km - b.distance_km);
   },
   async updateStorage(id: string, updates: Partial<StorageFacility>): Promise<StorageFacility | undefined> {
-    FACILITIES = FACILITIES.map((facility) => facility.id === id ? { ...facility, ...updates } : facility);
-    return mockDelay(FACILITIES.find((facility) => facility.id === id), 400);
+    const response = await apiClient.put(`/api/storage/${id}`, updates);
+    return normalizeStorage(response.data);
   },
   async deleteStorage(id: string): Promise<boolean> {
-    const before = FACILITIES.length;
-    FACILITIES = FACILITIES.filter((facility) => facility.id !== id);
-    return mockDelay(before !== FACILITIES.length, 300);
+    await apiClient.delete(`/api/storage/${id}`);
+    return true;
   },
   async updateAvailability(id: string, availableTons: number): Promise<StorageFacility | undefined> {
-    return this.updateStorage(id, { available_tons: availableTons, occupied_tons: Math.max(0, Math.round((FACILITIES.find((f) => f.id === id)?.capacity_tons ?? 0) - availableTons)) });
+    return this.updateStorage(id, { available_tons: availableTons, occupied_tons: Math.max(0, availableTons) } as Partial<StorageFacility>);
   },
   async bookStorage(input: BookingInput): Promise<Booking> {
-    const f = FACILITIES.find((x) => x.id === input.facility_id)!;
-    const booking: Booking = {
-      ...input,
-      id: `bk_${Date.now()}`,
-      status: "Confirmed",
-      created_at: new Date().toISOString(),
-      facility_name: f.name,
-      estimated_cost: Math.round(input.quantity_kg * f.cost_per_kg_day * input.duration_days),
-    };
-    BOOKINGS = [booking, ...BOOKINGS];
-    return mockDelay(booking, 700);
+    const response = await apiClient.post("/api/storage/bookings", input);
+    return {
+      ...response.data,
+      facility_name: "Storage",
+      created_at: response.data.created_at ?? new Date().toISOString(),
+    } as Booking;
   },
   async getBookings(ownerId?: string) {
-    const list = ownerId ? BOOKINGS.filter((booking) => booking.facility_id === ownerId) : BOOKINGS;
-    return mockDelay(list, 200);
+    const response = await apiClient.get("/api/storage/bookings");
+    return response.data.filter((booking: any) => !ownerId || booking.owner_id === ownerId);
   },
   async updateBookingStatus(id: string, status: Booking["status"]): Promise<Booking | undefined> {
-    BOOKINGS = BOOKINGS.map((booking) => booking.id === id ? { ...booking, status } : booking);
-    return mockDelay(BOOKINGS.find((booking) => booking.id === id), 300);
+    const response = await apiClient.put(`/api/storage/bookings/${id}`, { status });
+    return response.data as Booking;
   },
 };

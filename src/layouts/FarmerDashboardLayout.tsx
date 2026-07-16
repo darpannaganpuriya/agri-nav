@@ -9,6 +9,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { VoiceAssistant } from "@/components/VoiceAssistant";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 const ITEMS = [
   { to: "/dashboard",              label: "Dashboard",     icon: LayoutDashboard, end: true },
@@ -89,6 +90,7 @@ export function FarmerDashboardLayout() {
             <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
+            <LanguageSelector />
             <div className="flex items-center gap-2 rounded-full border border-border/60 bg-card px-2 py-1">
               <span className="grid h-7 w-7 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
                 {(user?.name ?? "R")[0]}

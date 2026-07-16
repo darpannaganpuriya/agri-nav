@@ -9,7 +9,17 @@ const AuthCtx = createContext<{
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  useEffect(() => { setUser(authService.currentUser()); }, []);
+  useEffect(() => {
+    let active = true;
+    const loadUser = async () => {
+      const resolvedUser = await authService.hydrateCurrentUser();
+      if (active) setUser(resolvedUser);
+    };
+    loadUser();
+    return () => {
+      active = false;
+    };
+  }, []);
   return (
     <AuthCtx.Provider value={{
       user, setUser,
