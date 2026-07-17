@@ -61,6 +61,7 @@ import { ColdStorage } from "@/pages/dashboard/ColdStorage";
 import { Weather } from "@/pages/dashboard/Weather";
 import { History } from "@/pages/dashboard/History";
 import { Profile, Settings } from "@/pages/dashboard/Profile";
+import { BookingDetails } from "@/pages/dashboard/BookingDetails";
 import { StorageOnboarding } from "@/pages/storage/Onboarding";
 import { StorageOwnerDashboard } from "@/pages/storage/Dashboard";
 import { StorageMyStorage } from "@/pages/storage/MyStorage";
@@ -131,6 +132,7 @@ export function App() {
               <Route path="history" element={<History />} />
               <Route path="profile" element={<Profile />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="bookings/:id" element={<BookingDetails />} />
             </Route>
 
             {/* Storage owner flow */}
@@ -140,6 +142,7 @@ export function App() {
               <Route path="dashboard" element={<StorageOwnerDashboard />} />
               <Route path="my-storage" element={<StorageMyStorage />} />
               <Route path="bookings" element={<StorageBookings />} />
+              <Route path="bookings/:id" element={<BookingDetails />} />
               <Route path="availability" element={<StorageAvailability />} />
               <Route path="pricing" element={<StoragePricing />} />
               <Route path="analytics" element={<StorageAnalytics />} />

@@ -92,9 +92,13 @@ export const storageService = {
       created_at: response.data.created_at ?? new Date().toISOString(),
     } as Booking;
   },
-  async getBookings(ownerId?: string) {
-    const response = await apiClient.get("/api/storage/bookings");
-    return response.data.filter((booking: any) => !ownerId || booking.owner_id === ownerId);
+  async getFarmerBookings(): Promise<Booking[]> {
+    const response = await apiClient.get("/api/storage/bookings/farmer");
+    return response.data;
+  },
+  async getOwnerBookings(): Promise<Booking[]> {
+    const response = await apiClient.get("/api/storage/bookings/storage-owner");
+    return response.data;
   },
   async updateBookingStatus(id: string, status: Booking["status"]): Promise<Booking | undefined> {
     const response = await apiClient.put(`/api/storage/bookings/${id}`, { status });

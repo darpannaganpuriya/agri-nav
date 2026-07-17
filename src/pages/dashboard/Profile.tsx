@@ -5,29 +5,71 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import { User, Phone, Save, BarChart2, Bell, Shield, MapPin, Settings as SettingsIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { analysisService } from "@/services/analysisService";
+import { storageService } from "@/services/storageService";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { authService } from "@/services/authService";
 
 export function Profile() {
-  const { user } = useAuth();
-  const [stats, setStats] = useState({ totalAnalyses: 0, savedReports: 0 });
+  const { user, setUser } = useAuth();
+  const { lang, changeLang } = useLanguage();
+  const { theme, toggle } = useTheme();
+
+  const [stats, setStats] = useState({ totalAnalyses: 0, savedReports: 0, storageBookings: 0 });
+  const [formData, setFormData] = useState({
+    name: user?.name || "",
+    phone: user?.phone || "",
+    state: user?.state || "Maharashtra",
+    district: user?.district || "Indore",
+  });
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    analysisService.getHistory().then(history => {
+    Promise.all([
+      analysisService.getHistory(),
+      user?.role === "farmer" ? storageService.getFarmerBookings() : storageService.getOwnerBookings()
+    ]).then(([history, bookings]) => {
       setStats({
         totalAnalyses: history.length,
-        savedReports: history.length > 0 ? Math.floor(history.length * 0.7) : 0, // mockup for saved
+        savedReports: history.length > 0 ? Math.floor(history.length * 0.7) : 0,
+        storageBookings: bookings.length,
       });
-    });
-  }, []);
+    }).catch(console.error);
+  }, [user]);
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      const updatedUser = await authService.updateProfile(
+        formData.name,
+        formData.phone,
+        user?.company_name,
+        formData.state,
+        formData.district,
+        lang
+      );
+      setUser(updatedUser);
+      toast.success("Profile updated successfully");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleLanguageChange = (val: string) => {
+    changeLang(val);
+    // Also save to backend if we want, or just wait for explicit save
+  };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-4xl space-y-8 pb-12">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-emerald-700 dark:text-emerald-400">Farmer Profile</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-emerald-700 dark:text-emerald-400">Profile Settings</h1>
         <p className="text-sm text-muted-foreground mt-1">Manage your account, view activity, and update settings.</p>
       </div>
 
@@ -40,33 +82,62 @@ export function Profile() {
                 <Label>Full Name</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input className="pl-9" defaultValue={user?.name} />
+                  <Input 
+                    className="pl-9" 
+                    value={formData.name} 
+                    onChange={e => setFormData({ ...formData, name: e.target.value })} 
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Phone Number</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input className="pl-9" defaultValue={user?.phone} />
+                  <Input 
+                    className="pl-9" 
+                    value={formData.phone} 
+                    onChange={e => setFormData({ ...formData, phone: e.target.value })} 
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>State</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input className="pl-9" defaultValue="Maharashtra" />
+                  <Input 
+                    className="pl-9" 
+                    value={formData.state} 
+                    onChange={e => setFormData({ ...formData, state: e.target.value })} 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>District</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    className="pl-9" 
+                    value={formData.district} 
+                    onChange={e => setFormData({ ...formData, district: e.target.value })} 
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Role</Label>
                 <div className="relative">
                   <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input className="pl-9 bg-muted" disabled defaultValue={user?.role === "farmer" ? "Farmer" : user?.role} />
+                  <Input className="pl-9 bg-muted" disabled value={user?.role === "farmer" ? "Farmer" : "Cold Storage Owner"} />
                 </div>
               </div>
             </div>
             <div className="mt-8 flex justify-end">
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => toast.success("Profile updated successfully")}>Save Changes</Button>
+              <Button 
+                className="bg-emerald-600 hover:bg-emerald-700 text-white" 
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
             </div>
           </Card>
 
@@ -78,11 +149,11 @@ export function Profile() {
                   <p className="font-semibold">App Language</p>
                   <p className="text-sm text-muted-foreground">Select your preferred language.</p>
                 </div>
-                <Select defaultValue="en">
+                <Select value={lang} onValueChange={changeLang}>
                   <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="hi">हिंदी</SelectItem>
+                    <SelectItem value="hi">हिन्दी</SelectItem>
                     <SelectItem value="mr">मराठी</SelectItem>
                   </SelectContent>
                 </Select>
@@ -92,7 +163,7 @@ export function Profile() {
                   <p className="font-semibold">Dark Mode</p>
                   <p className="text-sm text-muted-foreground">Toggle dark theme appearance.</p>
                 </div>
-                <Switch />
+                <Switch checked={theme === "dark"} onCheckedChange={toggle} />
               </div>
             </div>
           </Card>
@@ -114,6 +185,13 @@ export function Profile() {
                 <div>
                   <p className="text-sm text-muted-foreground font-medium">Saved Reports</p>
                   <p className="text-2xl font-black">{stats.savedReports}</p>
+                </div>
+              </div>
+              <div className="bg-background rounded-xl p-4 border flex items-center gap-4">
+                <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg text-blue-600"><MapPin className="h-6 w-6" /></div>
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium">Storage Bookings</p>
+                  <p className="text-2xl font-black">{stats.storageBookings}</p>
                 </div>
               </div>
             </div>

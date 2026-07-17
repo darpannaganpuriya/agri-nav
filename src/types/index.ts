@@ -178,10 +178,11 @@ export interface BookingInput {
   crop: CropName;
   quantity_kg: number;
   duration_days: number;
+  arrival_date?: string;
 }
 export interface Booking extends BookingInput {
   id: string;
-  status: "Pending" | "Confirmed" | "Rejected" | "Completed" | "Cancelled";
+  status: "Pending" | "Confirmed" | "Accepted" | "Rejected" | "Completed" | "Cancelled";
   created_at: string;
   facility_name: string;
   owner_id?: string;

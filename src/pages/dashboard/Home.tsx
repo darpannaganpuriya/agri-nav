@@ -9,8 +9,10 @@ import { RiskBadge } from "@/components/RiskBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { weatherService } from "@/services/weatherService";
 import { analysisService, interpolateDailyPrices } from "@/services/analysisService";
+import { storageService } from "@/services/storageService";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatINR } from "@/utils/format";
+import { Package } from "lucide-react";
 
 // Mock weekly data for a richer dashboard
 const weeklyActivityData = [
@@ -27,6 +29,7 @@ export function DashboardHome() {
   const { user } = useAuth();
   const { data: weather } = useQuery({ queryKey: ["weather","Indore"], queryFn: () => weatherService.getWeather("Indore, MP") });
   const { data: history, isLoading } = useQuery({ queryKey: ["history"], queryFn: () => analysisService.getHistory() });
+  const { data: bookings, isLoading: isLoadingBookings } = useQuery({ queryKey: ["bookings", "farmer"], queryFn: () => storageService.getFarmerBookings() });
 
   const latest = history?.[0];
   const chartData = latest ? interpolateDailyPrices(latest.price.today, latest.price.after_15_days) : [];
@@ -186,6 +189,43 @@ export function DashboardHome() {
                   <div className="flex items-center justify-between border-t pt-3 mt-1">
                     <span className="text-sm font-medium px-2 py-1 bg-primary/10 text-primary rounded-md">{h.recommendation.action}</span>
                     <span className="font-bold text-emerald-600">{formatINR(h.recommendation.expected_profit)}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Storage Bookings Widget */}
+      <Card className="p-6 shadow-sm border-border/60">
+        <div className="mb-6 flex items-center justify-between border-b pb-4">
+          <h3 className="text-xl font-bold">Recent Storage Bookings</h3>
+        </div>
+        {isLoadingBookings ? (
+          <div className="space-y-4">{[1,2].map(i => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
+        ) : (bookings?.length ?? 0) === 0 ? (
+          <div className="rounded-2xl border-2 border-dashed border-border p-12 text-center">
+            <Package className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
+            <p className="text-lg font-medium">No storage bookings yet.</p>
+            <p className="text-sm text-muted-foreground mt-1 mb-4">Book a cold storage facility near you.</p>
+            <Button asChild><Link to="/dashboard/storage">Find Cold Storage</Link></Button>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {bookings!.slice(0, 3).map((b) => (
+              <Link key={b.id} to={`/dashboard/bookings/${b.id}`}>
+                <div className="flex flex-col gap-3 rounded-xl border p-4 transition-all hover:border-primary/50 hover:shadow-md bg-background">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-bold text-lg">{b.crop}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(b.created_at).toLocaleDateString("en-IN")}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full font-bold ${b.status === "Pending" ? "bg-amber-100 text-amber-700" : b.status === "Accepted" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>{b.status}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-t pt-3 mt-1 text-sm">
+                    <span className="text-muted-foreground">{b.quantity_kg} kg</span>
+                    <span className="font-bold">{formatINR(b.estimated_cost)}</span>
                   </div>
                 </div>
               </Link>

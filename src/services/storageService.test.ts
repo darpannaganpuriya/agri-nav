@@ -25,7 +25,7 @@ describe("storageService bookings", () => {
       duration_days: 3,
     });
 
-    const ownerBookings = await storageService.getBookings("owner_123");
+    const ownerBookings = await storageService.getOwnerBookings();
 
     expect(booking.owner_id).toBe("owner_123");
     expect(ownerBookings.some((item: any) => item.id === booking.id)).toBe(true);

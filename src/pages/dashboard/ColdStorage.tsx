@@ -17,13 +17,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const StorageMap = lazy(() => import("./StorageMap"));
 
-function ClientMap({ facilities }: { facilities?: StorageFacility[] }) {
+function ClientMap({ facilities, selectedId, onSelect }: { facilities?: StorageFacility[]; selectedId: string | null; onSelect: (id: string) => void }) {
   const [isClient, setIsClient] = useState(false);
   useEffect(() => setIsClient(true), []);
   if (!isClient) return <Skeleton className="h-full w-full" />;
   return (
     <Suspense fallback={<Skeleton className="h-full w-full" />}>
-      <StorageMap facilities={facilities} />
+      <StorageMap facilities={facilities} selectedId={selectedId} onSelect={onSelect} />
     </Suspense>
   );
 }
@@ -31,11 +31,17 @@ function ClientMap({ facilities }: { facilities?: StorageFacility[] }) {
 export function ColdStorage() {
   const [crop, setCrop] = useState<CropName | "all">("all");
   const [maxDistance, setMaxDistance] = useState(20);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const { data: facilities, isLoading } = useQuery({
     queryKey: ["facilities", crop, maxDistance],
     queryFn: () => storageService.getFacilities({ crop: crop === "all" ? undefined : crop, maxDistance }),
   });
+
+  const handleSelect = (id: string) => {
+    setSelectedId(id);
+    document.getElementById(`storage-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -64,23 +70,29 @@ export function ColdStorage() {
 
       <div className="grid gap-4 lg:grid-cols-5">
         <Card className="h-[420px] overflow-hidden lg:col-span-3" style={{ isolation: "isolate" }}>
-          <ClientMap facilities={facilities} />
+          <ClientMap facilities={facilities} selectedId={selectedId} onSelect={handleSelect} />
         </Card>
 
-        <div className="space-y-3 lg:col-span-2">
+        <div className="space-y-3 lg:col-span-2 overflow-y-auto pr-2" style={{ maxHeight: "420px" }}>
           {isLoading ? [1,2,3].map(i => <Skeleton key={i} className="h-40" />) :
             facilities?.length === 0 ? (
               <Card className="p-8 text-center text-sm text-muted-foreground">No facilities match your filters.</Card>
-            ) : facilities?.map(f => <FacilityCard key={f.id} f={f} />)}
+            ) : facilities?.map(f => (
+              <FacilityCard key={f.id} f={f} isSelected={selectedId === f.id} onSelect={() => setSelectedId(f.id)} />
+            ))}
         </div>
       </div>
     </div>
   );
 }
 
-function FacilityCard({ f }: { f: StorageFacility }) {
+function FacilityCard({ f, isSelected, onSelect }: { f: StorageFacility; isSelected: boolean; onSelect: () => void }) {
   return (
-    <Card className="overflow-hidden">
+    <Card 
+      id={`storage-${f.id}`} 
+      className={`overflow-hidden transition-all cursor-pointer ${isSelected ? 'ring-2 ring-primary shadow-md' : 'hover:border-primary/50'}`}
+      onClick={onSelect}
+    >
       <img src={f.image} alt="" className="h-32 w-full object-cover" loading="lazy" />
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
@@ -134,10 +146,11 @@ function BookDialog({ f }: { f: StorageFacility }) {
   const [open, setOpen] = useState(false);
   const [qty, setQty] = useState(100);
   const [days, setDays] = useState(10);
-  const [crop, setCrop] = useState<CropName>(f.compatible_crops[0]);
+  const [crop, setCrop] = useState<CropName>(f.compatible_crops[0] || ("Wheat" as any));
+  const [arrivalDate, setArrivalDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   const mutation = useMutation({
-    mutationFn: () => storageService.bookStorage({ facility_id: f.id, crop, quantity_kg: qty, duration_days: days }),
+    mutationFn: () => storageService.bookStorage({ facility_id: f.id, crop, quantity_kg: qty, duration_days: days, arrival_date: arrivalDate } as any),
     onSuccess: (b) => {
       toast.success(`Booking confirmed · ${b.facility_name}`, { description: `Estimated cost ${new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(b.estimated_cost)}` });
       qc.invalidateQueries({ queryKey: ["bookings"] });
@@ -167,6 +180,7 @@ function BookDialog({ f }: { f: StorageFacility }) {
             <div><Label>Quantity (kg)</Label><Input type="number" className="mt-1" value={qty} onChange={e => setQty(Number(e.target.value))} /></div>
             <div><Label>Duration (days)</Label><Input type="number" className="mt-1" value={days} onChange={e => setDays(Number(e.target.value))} /></div>
           </div>
+          <div><Label>Arrival Date</Label><Input type="date" className="mt-1" value={arrivalDate} onChange={e => setArrivalDate(e.target.value)} /></div>
           {overCap && <p className="text-xs text-destructive">Quantity exceeds available capacity.</p>}
           <div className="rounded-lg bg-muted p-3 text-sm">
             <p>Estimated cost <b className="float-right">{new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(estimate)}</b></p>

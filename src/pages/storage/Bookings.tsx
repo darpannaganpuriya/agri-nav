@@ -13,7 +13,7 @@ export function StorageBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
 
   const fetchBookings = () => {
-    storageService.getBookings(user?.id).then((data) => setBookings(data));
+    storageService.getOwnerBookings().then((data: any) => setBookings(data));
   };
 
   useEffect(() => {

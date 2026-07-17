@@ -9,6 +9,9 @@ export interface AuthUser {
   role: "farmer" | "storage_owner";
   hasStorage?: boolean;
   company_name?: string;
+  state?: string;
+  district?: string;
+  preferred_language?: string;
 }
 
 const KEY = "fasalseva.user";
@@ -60,8 +63,8 @@ export const authService = {
     localStorage.setItem(KEY, JSON.stringify(user));
     return user;
   },
-  async updateProfile(name: string, phone: string, company_name?: string): Promise<AuthUser> {
-    const response = await apiClient.put("/api/user/profile", { name, phone, company_name });
+  async updateProfile(name: string, phone: string, company_name?: string, state?: string, district?: string, preferred_language?: string): Promise<AuthUser> {
+    const response = await apiClient.put("/api/user/profile", { name, phone, company_name, state, district, preferred_language });
     const user = response?.data as AuthUser | undefined;
     if (!user) throw new Error("Failed to update profile");
     const sessionUser = { ...this.currentUser(), ...user };
