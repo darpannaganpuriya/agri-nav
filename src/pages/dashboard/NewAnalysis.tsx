@@ -1,11 +1,21 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, BrainCircuit, Leaf, TrendingUp } from "lucide-react";
+import { ArrowRight, BrainCircuit, Leaf, TrendingUp, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 const analysisCards = [
+  {
+    title: "Complete AI Analysis",
+    description: "Combine shelf-life and market predictions with a smart decision engine for ultimate insights.",
+    route: "/dashboard/new-analysis/complete-analysis",
+    buttonLabel: "Start Complete Analysis",
+    icon: Sparkles,
+    accent: "from-purple-500/20 via-background to-primary/10",
+    glow: "bg-purple-500/20",
+    isUsp: true,
+  },
   {
     title: "Shelf-Life Prediction",
     description: "Predict the remaining safe storage life of harvested crops using AI.",
@@ -44,11 +54,15 @@ export function NewAnalysis() {
                 <div className="relative">
                   <div className="flex items-center justify-between gap-3">
                     <div className={`grid h-12 w-12 place-items-center rounded-2xl ${card.glow}`}>
-                      <Icon className="h-6 w-6 text-primary" />
+                      <Icon className={`h-6 w-6 ${card.isUsp ? 'text-purple-600' : 'text-primary'}`} />
                     </div>
-                    <Badge className="border-primary/20 bg-primary/10 text-primary">AI</Badge>
+                    {card.isUsp ? (
+                      <Badge className="border-purple-500/30 bg-purple-500/10 text-purple-600 font-bold">USP FEATURE</Badge>
+                    ) : (
+                      <Badge className="border-primary/20 bg-primary/10 text-primary">AI</Badge>
+                    )}
                   </div>
-                  <h2 className="mt-5 text-2xl font-semibold">{card.title}</h2>
+                  <h2 className={`mt-5 text-2xl font-semibold ${card.isUsp ? 'text-purple-700 dark:text-purple-400' : ''}`}>{card.title}</h2>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">{card.description}</p>
                   <div className="mt-5 flex flex-wrap items-center gap-3">
                     <Button asChild className="gradient-primary text-primary-foreground">

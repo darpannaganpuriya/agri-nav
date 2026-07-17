@@ -213,3 +213,53 @@ export interface Scheme {
   link: string;
   crops?: CropName[];
 }
+
+// ---- Complete AI Analysis ----
+export interface CompleteAnalysisInput {
+  crop: CropName;
+  temperature: number;
+  humidity: number;
+  days_stored: number;
+  state: string;
+  district: string;
+  current_price: number;
+  month: number;
+  week: number;
+  quantity_kg: number;
+  transport_cost: number;
+  storage_cost?: number;
+}
+
+export interface CompleteAnalysisResult {
+  id: string;
+  crop: CropName;
+  quantity_kg: number;
+  created_at: string;
+  shelf_life: {
+    days_remaining: number;
+    risk_level: RiskLevel;
+    confidence: number;
+    recommendation: string;
+  };
+  market: {
+    today: number;
+    after_15_days: number;
+    trend: MarketTrend;
+    difference: number;
+    confidence: number;
+  };
+  best_selling: {
+    action: "Sell Now" | "Store Crop" | "Sell to Processing";
+    store_until: number; // days
+    reason: string;
+  };
+  cold_storage: {
+    recommended: boolean;
+    facility?: StorageFacility;
+  };
+  profit: {
+    sell_now: ProfitBreakdown;
+    store: ProfitBreakdown;
+  };
+  ai_advice: string;
+}

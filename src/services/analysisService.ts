@@ -72,7 +72,27 @@ function mapToAnalysisResult(input: AnalysisInput, shelfLife: any, price: any): 
   };
 }
 
-let HISTORY: AnalysisResult[] = [];
+// ── Persist history to localStorage ──────────────────────────────────────────
+const LS_KEY = "fasalseva_analysis_history";
+
+function loadHistory(): AnalysisResult[] {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? (JSON.parse(raw) as AnalysisResult[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(history: AnalysisResult[]): void {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(history.slice(0, 50)));
+  } catch {
+    // storage quota — ignore
+  }
+}
+
+let HISTORY: AnalysisResult[] = loadHistory();
 
 export const analysisService = {
   async runAnalysis(input: AnalysisInput): Promise<AnalysisResult> {
@@ -82,7 +102,8 @@ export const analysisService = {
       apiClient.post("/api/predict/price", { crop: input.crop, state: input.state, district: input.district, current_price: input.current_price, month: new Date().getMonth() + 1, week: 1 }),
     ]);
     const result = mapToAnalysisResult(input, shelfLifeRes.data, priceRes.data);
-    HISTORY = [result, ...HISTORY].slice(0, 20);
+    HISTORY = [result, ...HISTORY].slice(0, 50);
+    saveHistory(HISTORY);
     return result;
   },
 
@@ -92,6 +113,16 @@ export const analysisService = {
 
   async getById(id: string): Promise<AnalysisResult | undefined> {
     return HISTORY.find((h) => h.id === id);
+  },
+
+  async deleteById(id: string): Promise<void> {
+    HISTORY = HISTORY.filter((h) => h.id !== id);
+    saveHistory(HISTORY);
+  },
+
+  clearHistory(): void {
+    HISTORY = [];
+    saveHistory([]);
   },
 };
 

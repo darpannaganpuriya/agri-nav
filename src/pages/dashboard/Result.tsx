@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { RiskBadge } from "@/components/RiskBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatINR } from "@/utils/format";
-import { ArrowUpRight, ArrowDownRight, ArrowRight, Timer, LineChart as LineIcon, Warehouse, CloudSun, Sparkles, ChevronLeft } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, ArrowRight, Timer, LineChart as LineIcon, Warehouse, CloudSun, Sparkles, ChevronLeft, Printer, FileDown } from "lucide-react";
 import { motion } from "framer-motion";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, RadialBarChart, RadialBar, PolarAngleAxis } from "recharts";
 
 export function Result() {
   const { id } = useParams();
@@ -25,118 +25,167 @@ export function Result() {
   const chart = interpolateDailyPrices(data.price.today, data.price.after_15_days);
   const TrendIcon = data.price.trend === "Increasing" ? ArrowUpRight : data.price.trend === "Decreasing" ? ArrowDownRight : ArrowRight;
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <Button asChild variant="ghost" size="sm" className="mb-2 -ml-3"><Link to="/dashboard"><ChevronLeft className="mr-1 h-4 w-4" /> Back</Link></Button>
-        <h1 className="text-3xl font-bold tracking-tight">{data.crop} · {data.quantity_kg} kg</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Analyzed {new Date(data.created_at).toLocaleString("en-IN")}</p>
+    <div className="mx-auto max-w-6xl space-y-6 print:m-0 print:max-w-none print:p-0">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between print:hidden">
+        <div>
+          <Button asChild variant="ghost" size="sm" className="mb-2 -ml-3"><Link to="/dashboard"><ChevronLeft className="mr-1 h-4 w-4" /> Back</Link></Button>
+          <h1 className="text-3xl font-bold tracking-tight">{data.crop} Analysis Report</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Analyzed {new Date(data.created_at).toLocaleString("en-IN")}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Print Report</Button>
+          <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-primary-foreground"><FileDown className="mr-2 h-4 w-4" /> Export to PDF</Button>
+        </div>
+      </div>
+
+      {/* Print header (visible only on print) */}
+      <div className="hidden print:block mb-8 border-b pb-4">
+        <h1 className="text-4xl font-black text-black">FasalSeva AI Analysis Report</h1>
+        <p className="text-gray-500 mt-2">Crop: {data.crop} | Quantity: {data.quantity_kg} kg | Date: {new Date(data.created_at).toLocaleString("en-IN")}</p>
       </div>
 
       {/* Primary recommendation */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="overflow-hidden border-primary/30">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="print:shadow-none print:border">
+        <Card className="overflow-hidden border-primary/30 bg-primary/5">
           <div className="grid gap-6 p-6 md:grid-cols-[1fr_auto] md:p-8">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                <Sparkles className="h-3.5 w-3.5" /> Recommendation
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/20 px-2.5 py-1 text-xs font-bold text-primary">
+                <Sparkles className="h-3.5 w-3.5" /> AI Recommendation
               </span>
-              <h2 className="mt-3 text-3xl font-bold sm:text-4xl">{data.recommendation.action}
-                {data.recommendation.duration_days > 0 && <span className="text-muted-foreground"> · {data.recommendation.duration_days} days</span>}
+              <h2 className="mt-4 text-4xl font-black text-primary">{data.recommendation.action}
+                {data.recommendation.duration_days > 0 && <span className="text-muted-foreground text-2xl font-semibold ml-2">for {data.recommendation.duration_days} days</span>}
               </h2>
-              <p className="mt-2 max-w-lg text-sm text-muted-foreground">{data.recommendation.reason}</p>
-              <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                <Stat label="Expected profit" value={formatINR(data.recommendation.expected_profit)} tone="primary" />
-                <Stat label="Shelf life" value={`${data.spoilage.days_remaining} days`} />
-                <Stat label="Confidence" value={`${data.recommendation.confidence}%`} />
+              <p className="mt-3 max-w-2xl text-lg font-medium text-foreground/80 leading-relaxed">{data.recommendation.reason}</p>
+              
+              <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                <div className="bg-background rounded-xl p-4 border shadow-sm print:border-gray-200">
+                  <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Expected Profit</p>
+                  <p className="mt-1 text-2xl font-black text-primary">{formatINR(data.recommendation.expected_profit)}</p>
+                </div>
+                <div className="bg-background rounded-xl p-4 border shadow-sm print:border-gray-200">
+                  <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Shelf Life Left</p>
+                  <p className="mt-1 text-2xl font-black text-emerald-600">{data.spoilage.days_remaining} days</p>
+                </div>
+                <div className="bg-background rounded-xl p-4 border shadow-sm print:border-gray-200">
+                  <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">AI Confidence</p>
+                  <p className="mt-1 text-2xl font-black text-sky-600">{data.recommendation.confidence}%</p>
+                </div>
               </div>
             </div>
-            <ConfidenceRing pct={data.recommendation.confidence} />
+            
+            <div className="hidden md:flex flex-col items-center justify-center print:hidden">
+              <ConfidenceRing pct={data.recommendation.confidence} />
+            </div>
           </div>
         </Card>
       </motion.div>
 
       {/* Detail grid */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="p-6">
+      <div className="grid gap-6 lg:grid-cols-3 print:grid-cols-2">
+        <Card className="p-6 border-emerald-500/20 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground"><Timer className="h-4 w-4" /> Shelf life</span>
+            <span className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-emerald-600"><Timer className="h-5 w-5" /> Shelf Life Risk</span>
             <RiskBadge risk={data.spoilage.risk_level} />
           </div>
-          <p className="mt-3 text-3xl font-bold">{data.spoilage.days_remaining} days</p>
-          <p className="mt-1 text-xs text-muted-foreground">Remaining safe storage</p>
+          <div className="mt-6 flex items-baseline gap-2">
+            <p className="text-5xl font-black">{data.spoilage.days_remaining}</p>
+            <p className="text-lg font-medium text-muted-foreground">days safe</p>
+          </div>
+          <div className="mt-6 rounded-lg bg-emerald-500/10 p-3 text-sm text-emerald-800 dark:text-emerald-300 font-medium">
+            Store properly at recommended temperature and humidity to maintain this shelf life.
+          </div>
         </Card>
 
-        <Card className="p-6 lg:col-span-2">
+        <Card className="p-6 lg:col-span-2 border-amber-500/20 shadow-sm print:col-span-1">
           <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground"><LineIcon className="h-4 w-4" /> Market trend</span>
-            <span className={`flex items-center gap-1 text-sm font-semibold ${data.price.trend === "Increasing" ? "text-success" : data.price.trend === "Decreasing" ? "text-destructive" : "text-muted-foreground"}`}>
+            <span className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-amber-600"><LineIcon className="h-5 w-5" /> Market Intelligence</span>
+            <span className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold ${data.price.trend === "Increasing" ? "bg-emerald-500/10 text-emerald-600" : data.price.trend === "Decreasing" ? "bg-rose-500/10 text-rose-600" : "bg-sky-500/10 text-sky-600"}`}>
               <TrendIcon className="h-4 w-4" /> {data.price.trend}
             </span>
           </div>
-          <div className="mt-3 flex items-end gap-6">
-            <div><p className="text-xs text-muted-foreground">Today</p><p className="text-2xl font-bold">₹{data.price.today}<span className="text-sm font-medium text-muted-foreground">/qtl</span></p></div>
-            <div><p className="text-xs text-muted-foreground">In 15 days</p><p className="text-2xl font-bold">₹{data.price.after_15_days}<span className="text-sm font-medium text-muted-foreground">/qtl</span></p></div>
+          <div className="mt-6 flex items-end gap-10">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-1">Today's Mandi Price</p>
+              <p className="text-3xl font-bold">{formatINR(data.price.today)}<span className="text-base font-medium text-muted-foreground">/qtl</span></p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-1">Forecast in 15 days</p>
+              <p className="text-3xl font-bold">{formatINR(data.price.after_15_days)}<span className="text-base font-medium text-muted-foreground">/qtl</span></p>
+            </div>
           </div>
-          <div className="mt-4 h-32">
-            <ResponsiveContainer><AreaChart data={chart}>
-              <defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.4} /><stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} /></linearGradient></defs>
-              <XAxis dataKey="day" hide /><YAxis hide />
-              <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--color-border)" }} formatter={(v: number) => [`₹${v}/qtl`, "Price"]} />
-              <Area type="monotone" dataKey="price" stroke="var(--color-primary)" strokeWidth={2.5} fill="url(#rg)" />
-            </AreaChart></ResponsiveContainer>
+          <div className="mt-6 h-40 print:hidden">
+            <ResponsiveContainer>
+              <AreaChart data={chart}>
+                <defs>
+                  <linearGradient id="rg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="day" hide />
+                <YAxis hide domain={['dataMin - 100', 'dataMax + 100']} />
+                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--color-border)" }} formatter={(v: number) => [formatINR(v) + '/qtl', "Price Forecast"]} />
+                <Area type="monotone" dataKey="price" stroke="var(--color-primary)" strokeWidth={3} fill="url(#rg)" />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-          <p className="mt-1 text-[10px] text-muted-foreground">Curve is interpolated between today and day-15 forecast for visualization.</p>
         </Card>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground"><Warehouse className="h-4 w-4" /> Storage</span>
-          </div>
-          <p className="mt-3 text-lg font-semibold">Malwa Cold Chain</p>
-          <p className="text-xs text-muted-foreground">3.2 km · ₹0.18/kg/day</p>
-          <Button asChild variant="link" className="mt-3 h-auto p-0"><Link to="/dashboard/cold-storage">View on map <ArrowRight className="ml-1 h-3 w-3" /></Link></Button>
-        </Card>
-
-        <Card className="p-6 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground"><CloudSun className="h-4 w-4" /> Weather</span>
-          </div>
-          <p className="mt-3 text-sm">Warm and humid — perishables should be moved to controlled storage within 24 hours.</p>
+        {/* Profit Scenarios */}
+        <Card className="p-6 lg:col-span-3 border-indigo-500/20 shadow-sm print:col-span-2">
+           <h3 className="text-lg font-bold flex items-center gap-2 mb-4 text-indigo-600"><TrendingUp className="h-5 w-5" /> Profit Estimation</h3>
+           <div className="grid md:grid-cols-2 gap-6">
+              <div className="border rounded-xl p-5 bg-background">
+                <h4 className="font-semibold text-muted-foreground mb-4">Option 1: Sell Today</h4>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between"><span>Revenue ({data.quantity_kg}kg)</span><span className="font-medium">{formatINR(data.profit_options.sell_now.revenue)}</span></div>
+                  <div className="flex justify-between text-rose-500"><span>Transport</span><span>-{formatINR(data.profit_options.sell_now.transport_cost)}</span></div>
+                  <div className="flex justify-between text-rose-500"><span>Storage</span><span>-{formatINR(data.profit_options.sell_now.storage_cost)}</span></div>
+                  <div className="pt-3 mt-3 border-t flex justify-between font-bold text-lg"><span>Net Profit</span><span>{formatINR(data.profit_options.sell_now.net_profit)}</span></div>
+                </div>
+              </div>
+              <div className="border rounded-xl p-5 bg-indigo-500/5 border-indigo-500/20">
+                <h4 className="font-semibold text-indigo-700 dark:text-indigo-400 mb-4">Option 2: Store ({data.spoilage.days_remaining > 15 ? 15 : data.spoilage.days_remaining} days)</h4>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between"><span>Expected Revenue</span><span className="font-medium">{formatINR(data.profit_options.store.revenue)}</span></div>
+                  <div className="flex justify-between text-rose-500"><span>Transport</span><span>-{formatINR(data.profit_options.store.transport_cost)}</span></div>
+                  <div className="flex justify-between text-rose-500"><span>Storage Cost</span><span>-{formatINR(data.profit_options.store.storage_cost)}</span></div>
+                  <div className="pt-3 mt-3 border-t border-indigo-500/20 flex justify-between font-bold text-lg text-indigo-700 dark:text-indigo-400"><span>Net Profit</span><span>{formatINR(data.profit_options.store.net_profit)}</span></div>
+                </div>
+              </div>
+           </div>
         </Card>
       </div>
-
-      {/* Sticky action bar */}
-      <div className="sticky bottom-4 z-20 flex flex-wrap gap-2 rounded-2xl border border-border bg-card/95 p-3 shadow-card-hover backdrop-blur">
-        <Button asChild className="gradient-primary text-primary-foreground"><Link to={`/dashboard/profit/${data.id}`}>Profit simulator</Link></Button>
-        <Button asChild variant="outline"><Link to="/dashboard/cold-storage">Find storage</Link></Button>
-        <Button variant="ghost" onClick={() => { /* already in history */ }}>Save to history</Button>
+      
+      {/* Footer / Disclaimer for print */}
+      <div className="hidden print:block mt-12 text-sm text-gray-400 border-t pt-4">
+        Disclaimer: This report is generated by FasalSeva AI using predictive machine learning models. Market conditions are subject to change. Use this as an advisory tool.
       </div>
-    </div>
-  );
-}
-
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "primary" }) {
-  return (
-    <div>
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className={`mt-1 text-xl font-bold ${tone === "primary" ? "text-primary" : ""}`}>{value}</p>
     </div>
   );
 }
 
 function ConfidenceRing({ pct }: { pct: number }) {
-  const r = 42, c = 2 * Math.PI * r;
-  const off = c * (1 - pct / 100);
+  const data = [{ name: "Confidence", value: pct, fill: "var(--color-primary)" }];
+  
   return (
-    <div className="relative mx-auto grid place-items-center">
-      <svg width={120} height={120} className="-rotate-90">
-        <circle cx={60} cy={60} r={r} stroke="var(--color-muted)" strokeWidth={10} fill="none" />
-        <circle cx={60} cy={60} r={r} stroke="var(--color-primary)" strokeWidth={10} fill="none" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={off} />
-      </svg>
-      <div className="absolute text-center">
-        <p className="text-2xl font-bold">{pct}%</p>
-        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Confidence</p>
+    <div className="relative w-32 h-32 flex flex-col items-center justify-center">
+      <div className="absolute inset-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <RadialBarChart cx="50%" cy="50%" innerRadius="70%" outerRadius="90%" barSize={8} data={data} startAngle={90} endAngle={-270}>
+            <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+            <RadialBar background clockWise dataKey="value" cornerRadius={10} />
+          </RadialBarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="z-10 flex flex-col items-center text-center mt-1">
+        <span className="text-3xl font-black text-primary">{pct}%</span>
+        <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground mt-1">Confidence</span>
       </div>
     </div>
   );

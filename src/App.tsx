@@ -51,6 +51,7 @@ import { Signup } from "@/pages/auth/Signup";
 
 import { DashboardHome } from "@/pages/dashboard/Home";
 import { NewAnalysis } from "@/pages/dashboard/NewAnalysis";
+import { CompleteAnalysis } from "@/pages/dashboard/CompleteAnalysis";
 import { PricePrediction } from "@/pages/dashboard/PricePrediction";
 import { ShelfLifePrediction } from "@/pages/dashboard/ShelfLifePrediction";
 import { Result } from "@/pages/dashboard/Result";
@@ -119,6 +120,7 @@ export function App() {
             <Route path="/dashboard" element={<RequireFarmer><FarmerDashboardLayout /></RequireFarmer>}>
               <Route index element={<DashboardHome />} />
               <Route path="new-analysis" element={<NewAnalysis />} />
+              <Route path="new-analysis/complete-analysis" element={<CompleteAnalysis />} />
               <Route path="new-analysis/spoilage" element={<ShelfLifePrediction />} />
               <Route path="new-analysis/price-prediction" element={<PricePrediction />} />
               <Route path="result/:id" element={<Result />} />

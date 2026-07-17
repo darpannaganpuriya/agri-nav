@@ -121,16 +121,9 @@ export function PricePrediction() {
     setForm(defaultForm);
   };
 
-  const handleDownload = () => {
+  const handlePrint = () => {
     if (!result) return;
-    const payload = `Market Price Prediction\nCrop: ${form.crop}\nCurrent Price: ₹${result.current_price}\nPredicted Price: ₹${result.price_after_15_days}\nDifference: ₹${result.difference}\nTrend: ${result.trend}\nConfidence: ${result.confidence}%`;
-    const blob = new Blob([payload], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${form.crop.toLowerCase()}-price-forecast.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
+    window.print();
   };
 
   const handleShare = async () => {
@@ -319,8 +312,8 @@ export function PricePrediction() {
           {result && (
             <Card className="p-6">
               <div className="flex flex-wrap gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={handleDownload}>
-                  <Download className="mr-2 h-4 w-4" /> Download report
+                <Button type="button" variant="outline" size="sm" onClick={handlePrint} className="print:hidden">
+                  <Download className="mr-2 h-4 w-4" /> Print / Export PDF
                 </Button>
                 <Button type="button" variant="outline" size="sm" onClick={handleShare}>
                   <Share2 className="mr-2 h-4 w-4" /> Share result

@@ -42,10 +42,10 @@ export function LanguageSelector() {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-11 z-[9999] w-52 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+        <div className="absolute right-0 top-11 z-[99] w-48 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
           <div className="px-3 py-2 border-b border-border/60">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              भाषा चुनें · Select Language
+              Select Language
             </p>
           </div>
 
@@ -55,7 +55,7 @@ export function LanguageSelector() {
                 <button
                   onClick={() => {
                     setOpen(false);
-                    changeLang(language.code);   // sets cookie → reloads page
+                    changeLang(language.code);
                   }}
                   className={cn(
                     "flex w-full items-center justify-between gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted",
@@ -73,10 +73,6 @@ export function LanguageSelector() {
               </li>
             ))}
           </ul>
-
-          <div className="border-t border-border/60 px-3 py-1.5 text-[10px] text-muted-foreground">
-            Powered by Google Translate
-          </div>
         </div>
       )}
     </div>
