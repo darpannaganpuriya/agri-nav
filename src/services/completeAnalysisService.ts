@@ -55,7 +55,7 @@ export const completeAnalysisService = {
     let recommendedStorage: StorageFacility | undefined = undefined;
     if (action === "Store Crop") {
       try {
-        const storages = await storageService.searchStorage({ crop: input.crop, state: input.state, district: input.district });
+        const storages = await storageService.getFacilities({ crop: input.crop });
         if (storages && storages.length > 0) {
           recommendedStorage = storages[0];
         }

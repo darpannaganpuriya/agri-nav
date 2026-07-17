@@ -16,10 +16,11 @@ export function Profile() {
   const [stats, setStats] = useState({ totalAnalyses: 0, savedReports: 0 });
 
   useEffect(() => {
-    const history = analysisService.getHistory();
-    setStats({
-      totalAnalyses: history.length,
-      savedReports: history.length > 0 ? Math.floor(history.length * 0.7) : 0, // mockup for saved
+    analysisService.getHistory().then(history => {
+      setStats({
+        totalAnalyses: history.length,
+        savedReports: history.length > 0 ? Math.floor(history.length * 0.7) : 0, // mockup for saved
+      });
     });
   }, []);
 

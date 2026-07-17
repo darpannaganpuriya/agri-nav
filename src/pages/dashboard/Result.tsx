@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { RiskBadge } from "@/components/RiskBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatINR } from "@/utils/format";
-import { ArrowUpRight, ArrowDownRight, ArrowRight, Timer, LineChart as LineIcon, Warehouse, CloudSun, Sparkles, ChevronLeft, Printer, FileDown } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, ArrowRight, Timer, LineChart as LineIcon, Warehouse, CloudSun, Sparkles, ChevronLeft, Printer, FileDown, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, RadialBarChart, RadialBar, PolarAngleAxis } from "recharts";
 
@@ -179,7 +179,7 @@ function ConfidenceRing({ pct }: { pct: number }) {
         <ResponsiveContainer width="100%" height="100%">
           <RadialBarChart cx="50%" cy="50%" innerRadius="70%" outerRadius="90%" barSize={8} data={data} startAngle={90} endAngle={-270}>
             <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
-            <RadialBar background clockWise dataKey="value" cornerRadius={10} />
+            <RadialBar background dataKey="value" cornerRadius={10} />
           </RadialBarChart>
         </ResponsiveContainer>
       </div>
