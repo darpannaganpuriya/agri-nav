@@ -5,6 +5,41 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 
+declare global {
+  interface Window {
+    googleTranslateElementInit?: () => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    google?: any;
+  }
+}
+
+/** Inject Google Translate widget once — it reads the googtrans cookie and
+ *  translates the entire page automatically on every page load. */
+function useGoogleTranslate() {
+  useEffect(() => {
+    if (document.getElementById("__gt_script")) return;
+
+    // Hidden mount point for the widget
+    const el = document.createElement("div");
+    el.id = "__gt_el";
+    el.style.display = "none";
+    document.body.appendChild(el);
+
+    window.googleTranslateElementInit = () => {
+      new window.google!.translate.TranslateElement(
+        { pageLanguage: "en", autoDisplay: false },
+        "__gt_el",
+      );
+    };
+
+    const script = document.createElement("script");
+    script.id = "__gt_script";
+    script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+    script.async = true;
+    document.head.appendChild(script);
+  }, []);
+}
+
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { FarmerDashboardLayout } from "@/layouts/FarmerDashboardLayout";
 import { StorageOwnerLayout } from "@/layouts/StorageOwnerLayout";
@@ -62,6 +97,7 @@ export function App() {
   // BrowserRouter uses window.location, so mount only after hydration.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  useGoogleTranslate(); // inject GT script — reads googtrans cookie, translates page
   if (!mounted) return null;
   return (
     <LanguageProvider>
