@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { FarmerDashboardLayout } from "@/layouts/FarmerDashboardLayout";
@@ -63,6 +64,7 @@ export function App() {
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
   return (
+    <LanguageProvider>
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
@@ -113,5 +115,6 @@ export function App() {
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
+    </LanguageProvider>
   );
 }
