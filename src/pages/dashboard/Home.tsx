@@ -209,7 +209,7 @@ export function DashboardHome() {
             <Package className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
             <p className="text-lg font-medium">No storage bookings yet.</p>
             <p className="text-sm text-muted-foreground mt-1 mb-4">Book a cold storage facility near you.</p>
-            <Button asChild><Link to="/dashboard/storage">Find Cold Storage</Link></Button>
+            <Button asChild><Link to="/dashboard/cold-storage">Find Cold Storage</Link></Button>
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
