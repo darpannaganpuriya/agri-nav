@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { storageService } from "@/services/storageService";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatINR } from "@/utils/format";
-import { ArrowLeft, Package, Calendar, Phone, Mail, Clock, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Package, Calendar, Phone, Mail, Clock, CheckCircle, XCircle, User } from "lucide-react";
 import { toast } from "sonner";
 import type { Booking } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -105,22 +105,28 @@ export function BookingDetails() {
           </div>
         </Card>
 
-        <Card className="p-6">
+          <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4 border-b pb-2">{isOwner ? "Farmer Details" : "Storage Owner Details"}</h2>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Contact information will be available here if the user added it to their profile. (Mocked for now)</p>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-muted rounded-md"><User className="h-5 w-5 text-muted-foreground" /></div>
+              <div>
+                <p className="text-sm text-muted-foreground">Name</p>
+                <p className="font-semibold">{isOwner ? (booking.farmer_name || 'N/A') : (booking.owner_name || 'N/A')}</p>
+              </div>
+            </div>
             <div className="flex items-center gap-3">
               <div className="p-2 bg-muted rounded-md"><Phone className="h-5 w-5 text-muted-foreground" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Phone Number</p>
-                <p className="font-semibold">+91 XXXXX XXXXX</p>
+                <p className="font-semibold">{isOwner ? (booking.farmer_phone || 'N/A') : (booking.owner_phone || 'N/A')}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="p-2 bg-muted rounded-md"><Mail className="h-5 w-5 text-muted-foreground" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-semibold">{isOwner ? (booking.farmer_name || 'farmer').toLowerCase().replace(' ', '.') + '@gmail.com' : 'contact@storage.com'}</p>
+                <p className="font-semibold">{isOwner ? (booking.farmer_email || 'N/A') : (booking.owner_email || 'N/A')}</p>
               </div>
             </div>
           </div>

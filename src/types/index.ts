@@ -188,6 +188,11 @@ export interface Booking extends BookingInput {
   owner_id?: string;
   farmer_id?: string;
   farmer_name?: string;
+  farmer_phone?: string;
+  farmer_email?: string;
+  owner_name?: string;
+  owner_phone?: string;
+  owner_email?: string;
   estimated_cost: number;
 }
 
