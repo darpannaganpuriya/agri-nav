@@ -4,7 +4,7 @@ const token = typeof window !== "undefined" ? window.localStorage.getItem("fasal
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "https://fasalseva-backend.onrender.com",
-  timeout: 15_000,
+  timeout: 60_000,
   headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
 });
 
